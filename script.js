@@ -1,4 +1,4 @@
-// Housemates and tasks
+// Change here housemates and tasks
 const housemates = ["Nathan", "Miguel", "Michelle", "Diana", "Martin"];
 const tasks = ["Kitchen and Trash", "Living Room and Sun Room", "Dining Room and Hallway", "Second Floor and Stairs"];
 
@@ -13,19 +13,22 @@ const currentWeek = new Date().getWeekNumber();
 
 // Function to get the off-duty person for the week
 function getOffDutyPerson() {
-    const offDutyIndex = (currentWeek - 1) % housemates.length; // Subtract 1 to make week 1 start with index 0
-    return housemates[offDutyIndex];
+    return housemates[currentWeek % housemates.length]; // Cycles fairly through all housemates
 }
 
-// Assign tasks fairly (rotates each week, excluding the off-duty person)
+// Assign tasks fairly (rotates each week, ensuring fair shifts)
 function getAssignments() {
     const offDutyPerson = getOffDutyPerson();
-    const availableHousemates = housemates.filter(person => person !== offDutyPerson);
+    const availableHousemates = [...housemates.filter(person => person !== offDutyPerson)];
 
-    return tasks.map((task, i) => {
-        const assignedIndex = (currentWeek + i) % availableHousemates.length;
-        return { task, assignedTo: availableHousemates[assignedIndex] };
-    });
+    // Rotate housemates based on the current week
+    const shift = currentWeek % availableHousemates.length;
+    const rotatedHousemates = [...availableHousemates.slice(shift), ...availableHousemates.slice(0, shift)];
+
+    return tasks.map((task, i) => ({
+        task,
+        assignedTo: rotatedHousemates[i],
+    }));
 }
 
 // Render the task table
@@ -36,7 +39,7 @@ function renderTable() {
     const offDutyPerson = getOffDutyPerson();
     const assignments = getAssignments();
 
-    // Add a row for the off-duty person
+    // Add a row for the off-duty person. Delete if no person is off-duty
     const offDutyRow = document.createElement("tr");
     offDutyRow.innerHTML = `
         <td><strong>Off Duty</strong></td>
